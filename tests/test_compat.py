@@ -51,7 +51,7 @@ class CompatibilityTests(unittest.TestCase):
     def test_app_version(self):
         cfg = configparser.ConfigParser()
         cfg.read(ROOT / "overrides/default/app.conf")
-        self.assertEqual(cfg["launcher"]["version"], "10.4.1")
+        self.assertEqual(cfg["launcher"]["version"], "10.4.2")
 
 
 if __name__ == "__main__":
