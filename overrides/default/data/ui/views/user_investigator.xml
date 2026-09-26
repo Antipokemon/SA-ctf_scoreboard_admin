@@ -1,0 +1,77 @@
+<form version="1.1" script="ctf_admin_context.js" theme="dark">
+  <label>User Investigator</label>
+  <description>Deep dive a team/user for the selected CTF.</description>
+  <search id="base_1">
+    <query>index=scoreboard_admin ctf_id="$ctf_id$" Result=* Number=* user!=admin</query>
+    <earliest>0</earliest>
+    <latest>now</latest>
+  </search>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="dropdown" token="team" searchWhenChanged="true">
+      <label>Team</label>
+      <search>
+        <query>| inputlookup ctf_registrations
+| search ctf_id="$ctf_id$" status="registered"
+| where Team!=""
+| dedup Team
+| sort Team</query>
+      </search>
+      <fieldForLabel>Team</fieldForLabel>
+      <fieldForValue>Team</fieldForValue>
+      <selectFirstChoice>true</selectFirstChoice>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <title>Questions Attempted</title>
+        <search base="base_1"><query>| search Team="$team$" | stats dc(Number) as numquestions</query></search>
+        <option name="underLabel">Questions</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Minutes Played</title>
+        <search base="base_1"><query>| search Team="$team$" | stats earliest(_time) as first latest(_time) as last | eval minutes=round((last-first)/60,0) | fields minutes</query></search>
+        <option name="underLabel">minutes</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Current Score</title>
+        <search>
+          <query>| inputlookup currentscore.csv
+| search ctf_id="$ctf_id$" Team="$team$"
+| stats max(Score) as Score</query>
+        </search>
+        <option name="underLabel">Points</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Current Rank</title>
+        <search>
+          <query>| inputlookup currentscore.csv
+| search ctf_id="$ctf_id$" Team="$team$"
+| stats max(Rank) as Rank</query>
+        </search>
+        <option name="underLabel">Place</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Submission History</title>
+        <search base="base_1">
+          <query>| search Team="$team$"
+| eval ScoreImpact=BasePointsAwarded+SpeedBonusAwarded+AdditionalBonusAwarded-Penalty
+| table _time Number QuestionOfficial Answer user Result ScoreImpact
+| sort - _time</query>
+        </search>
+        <option name="count">100</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>

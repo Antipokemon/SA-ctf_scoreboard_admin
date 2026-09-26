@@ -1,0 +1,20 @@
+<dashboard version="1.1" script="ctf_admin_context.js" theme="dark">
+  <label>Helpful Links</label>
+  <row>
+    <panel>
+      <html>
+        <h1>$ctf_event_name$</h1>
+        <p>Open participant dashboards for the selected CTF.</p>
+        <style>.btn-primary { margin:5px 10px 5px 0; }</style>
+        <p>
+          <a href="/app/SA-ctf_scoreboard/questions?ctf_id=$ctf_id$" class="btn btn-primary" target="_blank">Questions</a>
+          <a href="/app/SA-ctf_scoreboard/AllScores?ctf_id=$ctf_id$" class="btn btn-primary" target="_blank">All Scores</a>
+          <a href="/app/SA-ctf_scoreboard/top_10_teams?ctf_id=$ctf_id$" class="btn btn-primary" target="_blank">Top 10 Teams</a>
+          <a href="/app/SA-ctf_scoreboard/event_activity?ctf_id=$ctf_id$" class="btn btn-primary" target="_blank">CTF Activity</a>
+          <a href="/app/SA-ctf_scoreboard/score_timeline?ctf_id=$ctf_id$" class="btn btn-primary" target="_blank">Score Timeline</a>
+          <a href="/app/SA-ctf_registration/admin?ctf_id=$ctf_id$" class="btn btn-primary" target="_blank">Registration Admin</a>
+        </p>
+      </html>
+    </panel>
+  </row>
+</dashboard>

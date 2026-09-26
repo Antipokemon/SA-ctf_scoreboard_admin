@@ -1,0 +1,65 @@
+<form version="1.1" script="ctf_admin_context.js" theme="dark">
+  <label>Adjust Scores</label>
+  <fieldset submitButton="false">
+    <input type="multiselect" token="Teams" searchWhenChanged="true">
+      <label>Select Competitors / Teams — $ctf_event_name$</label>
+      <search>
+        <query>| inputlookup ctf_registrations
+| search ctf_id="$ctf_id$" status="registered"
+| eval label=if(Team!="",Team+" — "+Username,Username)
+| dedup Username
+| sort label</query>
+      </search>
+      <fieldForLabel>label</fieldForLabel>
+      <fieldForValue>Username</fieldForValue>
+    </input>
+    <input type="dropdown" token="Number" searchWhenChanged="true">
+      <label>Question</label>
+      <search>
+        <query>| inputlookup ctf_questions
+| search ctf_id="$ctf_id$"
+| eval Number_and_Question=Number.".  ".Question
+| sort Number</query>
+      </search>
+      <fieldForLabel>Number_and_Question</fieldForLabel>
+      <fieldForValue>Number</fieldForValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <html>
+        <form action="/en-US/custom/SA-ctf_scoreboard/scoreboard_controller/adjust_score" method="get">
+          <b>CTF:</b> $ctf_event_name$<br/>
+          Apply to: <b>$Teams$</b><br/>
+          Modify Question: <b>$Number$</b><br/><br/>
+
+          <input type="hidden" name="ctf_id" value="$ctf_id$"/>
+          <input type="hidden" name="Teams" value="$Teams$"/>
+          <input type="hidden" name="Adjust" value="True"/>
+          <input type="hidden" name="Number" value="$Number$"/>
+
+          ✚ <input type="number" min="0" id="Base" name="Base" value="0"/> Base points<br/>
+          ✚ <input type="number" min="0" id="Bonus" name="Bonus" value="0"/> Bonus points<br/>
+          ➖ <input type="number" min="0" id="Penalty" name="Penalty" value="0"/> Penalty points<br/>
+          ☰ <input type="text" id="Note" name="Note" required="required"/> Required note<br/><br/>
+          <input type="submit" value="Submit"/>
+        </form>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Questions — $ctf_event_name$</title>
+        <search>
+          <query>| inputlookup ctf_questions
+| search ctf_id="$ctf_id$"
+| table Number Question BasePoints StartTime EndTime
+| sort Number</query>
+        </search>
+        <option name="count">50</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>

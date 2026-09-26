@@ -1,0 +1,75 @@
+<dashboard version="1.1" script="ctf_admin_context.js,jquery-ui/jquery-ui.min.js,timepicker/jquery-ui-timepicker-addon.js,time_setup.js" stylesheet="css/ui-lightness/jquery-ui.min.css,css/jquery-ui-timepicker-addon.css,time_setup.css" theme="dark">
+  <label>Time Setup</label>
+  <row>
+    <panel>
+      <title>Edit Question Start and End Times — $ctf_event_name$</title>
+      <html>
+        <div class="row">
+          <div class="column column0">
+            <span class="step_number">0</span><span class="step_title">Review current settings.</span>
+            <ul>
+              <li>Confirm the correct CTF is selected above.</li>
+              <li>These times apply only to questions belonging to the selected CTF.</li>
+            </ul>
+          </div>
+          <div class="column column1">
+            <span class="step_number">1</span><span class="step_title">Specify new question times</span>
+            <div><b>Start Time</b><br/><input id="start_time_picker"/></div>
+            <div><b>End Time</b><br/><input id="end_time_picker"/></div>
+          </div>
+          <div class="column column2">
+            <span class="step_number">2</span><span class="step_title">Submit changes</span>
+            <div id="update_results_header">Results</div>
+            <div id="update_results"></div>
+            <input id="submit_button" type="button" value="Submit Changes" class="submit_button"/>
+          </div>
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Earliest Start Time</title>
+        <search>
+          <query>| inputlookup ctf_questions
+| search ctf_id="$ctf_id$"
+| eval dontcare="$somethingchanged$"
+| stats min(StartTime) as MinStartTime
+| eval NiceStartTime=strftime(MinStartTime,"%+")
+| fields NiceStartTime</query>
+        </search>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Latest End Time</title>
+        <search>
+          <query>| inputlookup ctf_questions
+| search ctf_id="$ctf_id$"
+| eval dontcare="$somethingchanged$"
+| stats max(EndTime) as MaxEndTime
+| eval NiceEndTime=strftime(MaxEndTime,"%+")
+| fields NiceEndTime</query>
+        </search>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Question Summary</title>
+        <search>
+          <query>| inputlookup ctf_questions
+| search ctf_id="$ctf_id$"
+| eval dontcare="$somethingchanged$"
+| eval NiceStartTime=strftime(StartTime,"%+"),NiceEndTime=strftime(EndTime,"%+")
+| sort StartTime Number
+| fields Number Question BasePoints NiceStartTime StartTime NiceEndTime EndTime</query>
+        </search>
+        <option name="count">100</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

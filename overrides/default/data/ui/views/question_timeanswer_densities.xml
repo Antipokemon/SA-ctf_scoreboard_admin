@@ -1,0 +1,26 @@
+<dashboard version="1.1" script="ctf_admin_context.js" theme="dark" refresh="15">
+  <label>Question Time/Answer Densities</label>
+  <row>
+    <panel>
+      <table>
+        <title>$ctf_event_name$</title>
+        <search>
+          <query>index=scoreboard_admin ctf_id="$ctf_id$" (Result="Correct" OR Result="Incorrect") user!=admin
+| eval EventType=Result
+| append [
+    | inputlookup ctf_questions
+    | search ctf_id="$ctf_id$"
+    | eval _time=StartTime, EventType="Question Start"
+    | fields _time ctf_id Number EventType
+  ]
+| table _time Number EventType user Team
+| sort _time Number</query>
+          <earliest>0</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">100</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

@@ -1,0 +1,42 @@
+<dashboard version="1.1" script="ctf_admin_context.js" theme="dark">
+  <label>Streaks And Penalties</label>
+  <row>
+    <panel>
+      <table>
+        <title>Current Winning Streaks — $ctf_event_name$</title>
+        <search>
+          <query>index=scoreboard_admin ctf_id="$ctf_id$" Result=* user!=admin
+| sort 0 user _time
+| eval binary=if(Result="Correct",1,0)
+| streamstats current=f last(binary) as previous by user
+| eval boundary=if(isnull(previous) OR binary!=previous,1,0)
+| streamstats sum(boundary) as streak_id by user
+| streamstats sum(binary) as WinningStreak by user streak_id
+| where binary=1
+| stats latest(WinningStreak) as "Winning Streak" latest(Number) as Question latest(_time) as Time by user
+| sort - "Winning Streak"
+| head 10</query>
+          <earliest>0</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Penalty Leaders</title>
+        <search>
+          <query>index=scoreboard_admin ctf_id="$ctf_id$" user!=admin
+| stats sum(Penalty) as Penalty count(eval(Result="Incorrect")) as IncorrectAttempts by Team
+| sort - Penalty
+| head 10</query>
+          <earliest>0</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

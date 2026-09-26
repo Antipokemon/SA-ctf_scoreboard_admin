@@ -1,0 +1,52 @@
+<form version="1.1" script="ctf_admin_context.js" theme="dark">
+  <label>Answers by User</label>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="multiselect" token="team" searchWhenChanged="true">
+      <label>Teams</label>
+      <search>
+        <query>| inputlookup ctf_registrations
+| search ctf_id="$ctf_id$" status="registered"
+| where Team!=""
+| dedup Team
+| sort Team</query>
+      </search>
+      <fieldForLabel>Team</fieldForLabel>
+      <fieldForValue>Team</fieldForValue>
+      <delimiter> OR </delimiter>
+      <choice value="*">All</choice>
+      <default>*</default>
+    </input>
+    <input type="multiselect" token="number" searchWhenChanged="true">
+      <label>Question Number</label>
+      <search>
+        <query>| inputlookup ctf_answers
+| search ctf_id="$ctf_id$"
+| dedup Number
+| sort Number</query>
+      </search>
+      <fieldForLabel>Number</fieldForLabel>
+      <fieldForValue>Number</fieldForValue>
+      <delimiter> OR </delimiter>
+      <choice value="*">All</choice>
+      <default>*</default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <table>
+        <title>$ctf_event_name$</title>
+        <search>
+          <query>index=scoreboard_admin ctf_id="$ctf_id$"
+| search Team="$team$"
+| search Number=$number$
+| table _time Number QuestionOfficial Answer user Team Result
+| sort - _time</query>
+          <earliest>0</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">100</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>

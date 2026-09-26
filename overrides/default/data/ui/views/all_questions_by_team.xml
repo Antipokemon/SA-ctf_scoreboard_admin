@@ -1,0 +1,29 @@
+<dashboard version="1.1" script="ctf_admin_context.js" theme="dark">
+  <label>All Questions by Team</label>
+  <row>
+    <panel>
+      <table>
+        <title>All Team Scores by Question — $ctf_event_name$</title>
+        <search>
+          <query>index=scoreboard ctf_id="$ctf_id$" user!=admin
+| stats max(BasePointsAwarded) as BasePoints
+        max(SpeedBonusAwarded) as BonusPoints
+        max(AdditionalBonusAwarded) as AdditionalBonus
+        sum(Penalty) as Penalty
+  by Team Number
+| eval Score=BasePoints+BonusPoints+AdditionalBonus-Penalty
+| eval Score=if(Score&lt;0,0,Score)
+| rename Number as QNum
+| fields Team QNum Score
+| sort Team QNum
+| xyseries Team QNum Score
+| fillnull value=NA</query>
+          <earliest>0</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">50</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

@@ -1,0 +1,39 @@
+<dashboard version="1.1" script="ctf_admin_context.js" theme="dark">
+  <label>Question Difficulty Analytics</label>
+  <row>
+    <panel>
+      <table>
+        <title>Question Performance — $ctf_event_name$</title>
+        <search>
+          <query>index=scoreboard_admin ctf_id="$ctf_id$" Number=* user!=admin NOT Result=Bonus NOT Result=Hint
+| stats count as Attempts
+        count(eval(Result="Correct")) as Correct
+        count(eval(Result="Incorrect")) as Incorrect
+        dc(Team) as TeamsAttempted
+  by ctf_id Number
+| append [
+    | inputlookup ctf_questions
+    | search ctf_id="$ctf_id$"
+    | eval Attempts=0,Correct=0,Incorrect=0,TeamsAttempted=0
+    | fields ctf_id Number Question BasePoints Attempts Correct Incorrect TeamsAttempted
+  ]
+| stats max(Attempts) as Attempts
+        max(Correct) as Correct
+        max(Incorrect) as Incorrect
+        max(TeamsAttempted) as TeamsAttempted
+        last(Question) as Question
+        last(BasePoints) as BasePoints
+  by ctf_id Number
+| eval CorrectPct=if(Attempts&gt;0,round((Correct/Attempts)*100,1),0)
+| sort Number
+| table Number Question BasePoints Attempts Correct Incorrect CorrectPct TeamsAttempted</query>
+          <earliest>0</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">100</option>
+        <option name="dataOverlayMode">heatmap</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

@@ -1,77 +1,27 @@
 # Capture the Flag Admin
 
-`SA-ctf_scoreboard_admin` is the administrative companion to `SA-ctf_scoreboard`.
+`SA-ctf_scoreboard_admin` is the administrator application for the Splunk Capture the Flag stack.
 
-This repository modernizes the original CTF administrator app for Splunk Enterprise 10.4. It manages protected CTF content and administrative scoring functions.
-
-The multi-CTF architecture uses `ctf_id` to keep answers, hints, questions, registrations, and scores separated when more than one CTF exists at the same time.
+This compatibility repository targets Splunk Enterprise 10.4 and supports multiple concurrent CTFs by using a stable `ctf_id` across registration, questions, answers, hints, submissions, scoring, and administrative views.
 
 ## Requirements
 
 - Splunk Enterprise 10.4
 - `SA-ctf_scoreboard`
 - `SA-ctf_registration`
-- Splunk administrator or a user assigned the CTF administrative role
+- Python 3 supplied by Splunk 10.4
+- `scoreboard`, `scoreboard_admin`, and `scoreboard_admin_kv` indexes
 - Roles:
   - `ctf_admin`
   - `ctf_competitor`
   - `ctf_answers_service`
-  - `ctf_registration_admin` where registration administration is delegated
-- The `scoreboard` and `scoreboard_admin` indexes
-- Python 3 as provided by Splunk 10.4
-- CTF content consistently tagged with the same `ctf_id`
+  - `ctf_registration_admin` when registration administration is delegated
 
-App ID:
+The registration app must be installed because the admin dashboards use its `ctf_events` and `ctf_registrations` data to select and scope events.
 
-```text
-SA-ctf_scoreboard_admin
-```
+## Multi-CTF identity
 
-Display name:
-
-```text
-Capture the Flag Admin
-```
-
-## Responsibilities by app
-
-### `SA-ctf_registration`
-
-Owns:
-
-- CTF definitions
-- event images/descriptions
-- registration open/close times
-- event start/end times
-- participant registration
-- participant role assignment
-
-### `SA-ctf_scoreboard`
-
-Owns:
-
-- participant question display
-- answer submission
-- hint purchases
-- participant scoring events
-- participant-facing score views
-
-### `SA-ctf_scoreboard_admin`
-
-Owns/protects:
-
-- official answers
-- official hints
-- administrative score adjustments
-- administrative content and scoring workflows
-
-## Multi-CTF requirement
-
-Every event must have a stable:
-
-```text
-ctf_id
-```
+Use the same `ctf_id` everywhere.
 
 Example:
 
@@ -79,190 +29,107 @@ Example:
 asteron-easy-2026
 ```
 
-The same `ctf_id` must be used in:
+The following identities are used:
+
+```text
+Question:     ctf_id + Number
+Answer:       ctf_id + Number
+Hint:         ctf_id + Number + HintNumber
+Registration: ctf_id + Username
+```
+
+Never reuse a `ctf_id` for a different CTF.
+
+## Admin event selector
+
+Multi-CTF administrative dashboards include a CTF selector at the top of the page.
+
+The selector is populated from:
 
 ```text
 SA-ctf_registration / ctf_events
-SA-ctf_registration / ctf_registrations
-SA-ctf_scoreboard / ctf_questions
-SA-ctf_scoreboard_admin / ctf_answers
-SA-ctf_scoreboard_admin / ctf_hints
-scoreboard events
-scoreboard_admin events
 ```
 
-Never use two different spellings for the same event.
+The selected event is exposed to searches as:
+
+```text
+$ctf_id$
+$ctf_event_name$
+```
+
+You can open a dashboard directly for a specific event:
+
+```text
+/en-US/app/SA-ctf_scoreboard_admin/q__a?ctf_id=asteron-easy-2026
+```
 
 ## Creating a CTF
 
-The event itself is created in **Capture the Flag Registration**, not in the admin scoreboard.
-
-Open:
+Create the event in:
 
 ```text
-/en-US/app/SA-ctf_registration/admin
-```
-
-Create the CTF and record its exact `ctf_id`.
-
-Example:
-
-```text
-asteron-easy-2026
+Capture the Flag Registration
+→ CTF Registration Admin
 ```
 
 Configure:
 
-```text
-Name
-Short description
-Full description
-Image
-Registration opens
-Registration closes
-Event starts
-Event ends
-Search URL
-Scoring URL
-Participant roles
-Enabled
-Allow updates
-```
+1. CTF ID
+2. name
+3. short/full descriptions
+4. event image
+5. registration open time
+6. registration close time
+7. event start time
+8. event end time
+9. search URL
+10. scoring URL if used
+11. participant roles
+12. Enabled
+13. Allow registration updates
 
-After the event exists, load the questions, answers, and hints for the same `ctf_id`.
+Record the exact `ctf_id`.
 
-## Content-loading order
+## Loading questions, answers, and hints
 
-Recommended order:
-
-1. create the CTF in `SA-ctf_registration`
-2. load questions into `SA-ctf_scoreboard`
-3. load answers into `SA-ctf_scoreboard_admin`
-4. load hints into `SA-ctf_scoreboard_admin`
-5. verify question/answer/hint counts
-6. test registration
-7. test one participant answer
-8. test one hint purchase
-9. open registration to users
-
-## Answers
-
-Official answers are protected in:
-
-```text
-ctf_answers
-```
-
-For multi-CTF operation, answer identity is:
-
-```text
-ctf_id + Number
-```
-
-Example:
-
-```csv
-ctf_id,Number,Answer
-asteron-easy-2026,1,WEB-01
-asteron-easy-2026,2,10.20.30.40
-```
-
-Question `1` from another CTF is allowed:
-
-```csv
-asteron-hard-2026,1,VPN-EDGE-02
-```
-
-because the `ctf_id` differs.
-
-## Hints
-
-Hints are protected in:
-
-```text
-ctf_hints
-```
-
-Hint identity is:
-
-```text
-ctf_id + Number + HintNumber
-```
-
-Example:
-
-```csv
-ctf_id,Number,HintNumber,Hint,HintCost
-asteron-easy-2026,1,1,"Look at authentication events.",10
-asteron-easy-2026,1,2,"Focus on WEB-01.",20
-```
-
-## Questions
-
-Questions are stored by `SA-ctf_scoreboard` in:
-
-```text
-ctf_questions
-```
-
-Expected event-scoped fields:
-
-```text
-ctf_id
-Number
-Question
-StartTime
-EndTime
-BasePoints
-AdditionalBonusPoints
-AdditionalBonusInstructions
-```
-
-The administrator app and participant app must use the same `ctf_id + Number`.
-
-## Validating a CTF before opening registration
+Every staged CSV must contain `ctf_id`.
 
 ### Questions
 
-```spl
-| inputlookup ctf_questions
-| search ctf_id="asteron-easy-2026"
-| stats count as questions
+```csv
+ctf_id,Number,Question,StartTime,EndTime,BasePoints,AdditionalBonusPoints,AdditionalBonusInstructions
+asteron-easy-2026,1,"What host was initially compromised?",1791806400,1791982800,100,0,""
 ```
 
 ### Answers
 
-```spl
-| inputlookup ctf_answers
-| search ctf_id="asteron-easy-2026"
-| stats count as answers
+```csv
+ctf_id,Number,Answer
+asteron-easy-2026,1,WEB-01
 ```
 
 ### Hints
 
-```spl
-| inputlookup ctf_hints
-| search ctf_id="asteron-easy-2026"
-| stats count as hints
+```csv
+ctf_id,Number,HintNumber,Hint,HintCost
+asteron-easy-2026,1,1,"Review authentication events.",10
 ```
 
-### Find questions without answers
+The multi-CTF staged loaders merge by event/question identity instead of replacing unrelated CTF content:
 
-```spl
-| inputlookup ctf_questions
-| search ctf_id="asteron-easy-2026"
-| fields ctf_id Number Question
-| lookup ctf_answers ctf_id Number OUTPUT Answer
-| where isnull(Answer)
+```text
+questions: ctf_id + Number
+answers:   ctf_id + Number
+hints:     ctf_id + Number + HintNumber
 ```
 
-Do not open the event until required questions have matching official answers.
+## Time bounding
 
-## Time-bounding an event
+There are two layers of time control.
 
-Event-level dates are configured in `SA-ctf_registration`.
+### Event-level time control
 
-The four event-level timestamps are:
+Managed by `SA-ctf_registration`:
 
 ```text
 registration_opens
@@ -271,38 +138,31 @@ event_starts
 event_ends
 ```
 
-Question-level scoring dates remain in:
+### Question-level scoring time control
+
+Stored in `ctf_questions`:
 
 ```text
-ctf_questions.StartTime
-ctf_questions.EndTime
+StartTime
+EndTime
 ```
+
+Use **Time Setup** in the admin app to update question times for only the currently selected CTF. Other CTF rows are preserved.
 
 Recommended relationship:
 
 ```text
-event_starts
-    <= question StartTime
-    <= question EndTime
-    <= event_ends
+event_starts <= question StartTime <= question EndTime <= event_ends
 ```
-
-This is a convention for event consistency; use intentional exceptions only when the scenario requires them.
 
 ## Enabling registration
 
-Registration is controlled from:
+Registration accepts a participant only when:
 
-```text
-Capture the Flag Registration → CTF Registration Admin
-```
-
-For a CTF to accept registration:
-
-1. the event must exist
-2. `enabled` must be true
-3. current time must be inside the event's registration window
-4. the participant role must be allowed by the registration app
+- the event exists
+- the event is enabled
+- current server time is inside its registration window
+- requested participant roles are permitted
 
 The normal participant role is:
 
@@ -310,21 +170,62 @@ The normal participant role is:
 ctf_competitor
 ```
 
-The registration backend adds that role to the Splunk user without removing the user's existing roles.
+## Validating content before an event
 
-## Opening an event
+Questions:
 
-Before the event starts:
+```spl
+| inputlookup ctf_questions
+| search ctf_id="asteron-easy-2026"
+| stats count
+```
 
-1. confirm registration state is correct
-2. confirm event start/end times
-3. confirm questions use the event's `ctf_id`
-4. confirm answers use the event's `ctf_id`
-5. confirm hints use the event's `ctf_id`
-6. confirm participant registration exists
-7. verify a participant sees only the selected event
-8. submit one test answer
-9. verify resulting events contain `ctf_id`
+Answers:
+
+```spl
+| inputlookup ctf_answers
+| search ctf_id="asteron-easy-2026"
+| stats count
+```
+
+Hints:
+
+```spl
+| inputlookup ctf_hints
+| search ctf_id="asteron-easy-2026"
+| stats count
+```
+
+Find questions missing answers:
+
+```spl
+| inputlookup ctf_questions
+| search ctf_id="asteron-easy-2026"
+| lookup ctf_answers ctf_id Number OUTPUT Answer
+| where isnull(Answer)
+| table ctf_id Number Question
+```
+
+Registered competitors:
+
+```spl
+| inputlookup ctf_registrations
+| search ctf_id="asteron-easy-2026" status="registered"
+| table Username DisplayUsername Team
+```
+
+## Starting a CTF
+
+Before start:
+
+1. create and enable the event in the registration app
+2. verify registration timing
+3. load questions, answers, and hints with the same `ctf_id`
+4. verify question StartTime/EndTime
+5. register a test competitor
+6. open Q & A in this admin app and select the event
+7. submit one test answer
+8. verify the score event contains `ctf_id`
 
 Example:
 
@@ -336,48 +237,53 @@ index=scoreboard ctf_id="asteron-easy-2026"
 
 ## Concurrent CTFs
 
-Multiple CTFs can use the same question numbers.
+Different CTFs may use the same question numbers.
 
-Example:
+These are distinct:
 
 ```text
 asteron-easy-2026 / Question 1
 asteron-hard-2026 / Question 1
 ```
 
-This works only if questions, answers, hints, hint entitlements, and score events are all scoped with `ctf_id`.
+Admin views filter using the selected `ctf_id`.
 
-Do not rely on `Number` alone.
+The generated `currentscore.csv` also contains `ctf_id`, and rank is calculated separately per CTF.
+
+## Adjusting scores
+
+Open **Adjust Scores**, select the CTF at the top, then select registered users/teams and a question.
+
+The adjustment request includes:
+
+```text
+ctf_id
+```
+
+so adjustments cannot collide with the same question number in another CTF.
 
 ## Closing registration
 
-Registration normally closes automatically when:
+Registration closes automatically at `registration_closes`.
 
-```text
-registration_closes
-```
-
-passes.
-
-To close it immediately, edit the CTF in the registration admin page and either:
+To close it immediately:
 
 - set the registration close time to now/past, or
-- disable the event if the event should no longer be available at all
+- disable the event if it should no longer be available
 
 ## Closing out a CTF
 
-At event completion:
+After the event:
 
-1. allow or set `event_ends`
+1. verify `event_ends`
 2. verify registration is closed
-3. stop any event-specific operational activity
-4. preserve the `ctf_id`
-5. export/archive scores if required
-6. retain official answers and hints as needed for historical review
-7. disable the registration event when it should no longer be shown
-8. do not reuse the `ctf_id`
+3. verify final scoring for the event
+4. export/archive results if required
+5. retain the original `ctf_id`
+6. disable the event when it should no longer be presented
+7. do not delete or reuse historical event IDs merely to clean up the UI
 
-Suggested final score validation:
+Final score check:
 
 ```spl
 index=scoreboard ctf_id="asteron-easy-2026"
@@ -391,145 +297,44 @@ index=scoreboard ctf_id="asteron-easy-2026"
 | sort - Score
 ```
 
-## Service account
-
-`SA-ctf_scoreboard` uses a privileged service account to retrieve protected answers.
-
-That account should use the dedicated role:
-
-```text
-ctf_answers_service
-```
-
-Do not give normal competitors direct read access to `ctf_answers`.
-
-The service account credentials are stored in the participant app's local controller configuration and must not be committed to Git.
-
 ## Splunk 10.4 compatibility
 
-The modernized administrator app uses Python 3-compatible custom commands.
-
-Commands that need the caller's Splunk session key must use:
+Custom commands that require the caller session key must retain:
 
 ```ini
 passauth = true
 ```
 
-For example:
+for `checkqaccess` and `toggleqaccess`.
 
-```ini
-[checkqaccess]
-filename = checkqaccess.py
-chunked = false
-generating = true
-enableheader = true
-passauth = true
-python.required = 3.9,3.13
-```
-
-and similarly for `toggleqaccess`.
-
-## Administrative role
-
-Verify:
-
-```text
-ctf_admin
-```
-
-is present and assigned to CTF administrators.
-
-Example:
-
-```bash
-podman exec -u splunk splunk \
-  /opt/splunk/bin/splunk btool authorize list ctf_admin --debug
-```
+Do not restore the upstream Python 2 implementations over the compatibility versions in `overrides/bin`.
 
 ## Logs
-
-Administrative scoreboard log:
 
 ```text
 $SPLUNK_HOME/var/log/scoreboard/scoreboard_admin.log
 ```
 
-Example:
+Rootless Podman:
 
 ```bash
 podman exec -u splunk splunk \
   tail -f /opt/splunk/var/log/scoreboard/scoreboard_admin.log
 ```
 
-## Troubleshooting
+## Build
 
-### `checkqaccess` says no session key was provided
+This repository is an overlay build. Files under `overrides/` are copied over the pinned upstream app during the build.
 
-Verify `passauth = true` in:
+Run:
 
-```text
-default/commands.conf
+```bash
+make build
 ```
 
-for both:
-
-```text
-checkqaccess
-toggleqaccess
-```
-
-### Answer lookup crosses CTFs
-
-Verify `ctf_answers` contains `ctf_id` and that the participant controller is filtering by both:
-
-```text
-ctf_id
-Number
-```
-
-### Hint lookup crosses CTFs
-
-Verify `ctf_hints` is scoped by:
-
-```text
-ctf_id
-Number
-HintNumber
-```
-
-### Old dashboard JavaScript appears after deployment
-
-Restart Splunk and validate in a private browser window to eliminate stale browser/static cache while testing.
-
-## Recommended event lifecycle
-
-```text
-Create CTF
-    ↓
-Load Questions / Answers / Hints
-    ↓
-Validate content by ctf_id
-    ↓
-Enable event
-    ↓
-Registration window opens
-    ↓
-Participants register
-    ↓
-Event starts
-    ↓
-Event runs
-    ↓
-Registration closes (at configured time)
-    ↓
-Event ends
-    ↓
-Validate/export results
-    ↓
-Disable/archive event
-```
+or the repository's documented build target.
 
 ## Related apps
 
-- `SA-ctf_registration` — event definitions, time windows, registration, and participant role assignment
-- `SA-ctf_scoreboard` — participant questions, answers, hints, and scoring
+- `SA-ctf_registration` — event definitions, registration windows, event windows, participant registration, role assignment
+- `SA-ctf_scoreboard` — participant questions, submissions, hints, and scoring

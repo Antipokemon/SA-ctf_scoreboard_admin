@@ -1,0 +1,27 @@
+<dashboard version="1.1" script="ctf_admin_context.js" theme="dark">
+  <label>Q &amp; A</label>
+  <row>
+    <panel>
+      <table>
+        <title>Questions and Answers — $ctf_event_name$</title>
+        <search>
+          <query>| inputlookup ctf_questions
+| search ctf_id="$ctf_id$"
+| append [ | inputlookup ctf_answers | search ctf_id="$ctf_id$" ]
+| eval NiceStartTime=strftime(StartTime,"%+")
+| eval NiceEndTime=strftime(EndTime,"%+")
+| stats last(Question) as Question
+        last(Answer) as Answer
+        last(BasePoints) as BasePoints
+        last(NiceStartTime) as Start
+        last(NiceEndTime) as End
+  by ctf_id Number
+| sort Number</query>
+        </search>
+        <option name="wrap">true</option>
+        <option name="drilldown">none</option>
+        <option name="count">100</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

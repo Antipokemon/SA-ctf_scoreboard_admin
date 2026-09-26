@@ -1,0 +1,21 @@
+<dashboard version="1.1" script="ctf_admin_context.js" theme="dark">
+  <label>Competitors</label>
+  <row>
+    <panel>
+      <title>Registered Competitors — $ctf_event_name$</title>
+      <table>
+        <search>
+          <query>| inputlookup ctf_registrations
+| search ctf_id="$ctf_id$" status="registered"
+| sort Team Username
+| table Username DisplayUsername Team FirstName LastName Email registered_at updated_at</query>
+          <earliest>0</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">50</option>
+        <option name="drilldown">none</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

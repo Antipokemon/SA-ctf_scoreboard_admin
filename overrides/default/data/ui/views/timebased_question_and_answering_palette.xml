@@ -1,0 +1,36 @@
+<dashboard version="1.1" script="ctf_admin_context.js" theme="dark">
+  <label>Time Based Question Answering</label>
+  <description>Correct and incorrect submissions over time for the selected CTF.</description>
+  <row>
+    <panel>
+      <chart>
+        <title>Correct Answers Over Time — $ctf_event_name$</title>
+        <search>
+          <query>index=scoreboard_admin ctf_id="$ctf_id$" Result="Correct" user!=admin BasePointsAwarded&gt;0
+| timechart useother=f limit=100 span=5m count by Number
+| streamstats sum(*) as *</query>
+          <earliest>0</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.layout.splitSeries">1</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Incorrect Answers Over Time</title>
+        <search>
+          <query>index=scoreboard_admin ctf_id="$ctf_id$" Result="Incorrect" user!=admin Penalty&gt;0
+| timechart useother=f limit=100 span=5m count by Number
+| streamstats sum(*) as *</query>
+          <earliest>0</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.layout.splitSeries">1</option>
+      </chart>
+    </panel>
+  </row>
+</dashboard>
