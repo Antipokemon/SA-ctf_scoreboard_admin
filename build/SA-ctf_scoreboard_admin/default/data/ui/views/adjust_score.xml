@@ -1,18 +1,25 @@
-<form version="1.1">
+<form version="1.1" script="ctf_admin_context.js" theme="dark">
   <label>Adjust Scores</label>
   <fieldset submitButton="false">
     <input type="multiselect" token="Teams" searchWhenChanged="true">
-      <label>Select Teams</label>
+      <label>Select Competitors / Teams — $ctf_event_name$</label>
       <search>
-        <query>|rest /services/authentication/users splunk_server=local | where roles="ctf_competitor" | fields title</query>
+        <query>| inputlookup ctf_registrations
+| search ctf_id="$ctf_id$" status="registered"
+| eval label=if(Team!="",Team+" — "+Username,Username)
+| dedup Username
+| sort label</query>
       </search>
-      <fieldForLabel>title</fieldForLabel>
-      <fieldForValue>title</fieldForValue>
+      <fieldForLabel>label</fieldForLabel>
+      <fieldForValue>Username</fieldForValue>
     </input>
     <input type="dropdown" token="Number" searchWhenChanged="true">
       <label>Question</label>
       <search>
-        <query>| inputlookup ctf_questions | eval Number_and_Question = Number . ".  " . Question</query>
+        <query>| inputlookup ctf_questions
+| search ctf_id="$ctf_id$"
+| eval Number_and_Question=Number.".  ".Question
+| sort Number</query>
       </search>
       <fieldForLabel>Number_and_Question</fieldForLabel>
       <fieldForValue>Number</fieldForValue>
@@ -21,43 +28,37 @@
   <row>
     <panel>
       <html>
-      <form action="/en-US/custom/SA-ctf_scoreboard/scoreboard_controller/adjust_score" method="get">
-        Apply to these teams: <b>$Teams$</b>
-        <br/>
-        Modify Question number: <b>$Number$</b>
-        <br/>
-        <input type="hidden" id="Teams" name="Teams" value="$Teams$"/>
-        <input type="hidden" id="Adjust" name="Adjust" value="True"/>
-        <input type="hidden" id="Number" name="Number" value="$Number$"/>
+        <form action="/en-US/custom/SA-ctf_scoreboard/scoreboard_controller/adjust_score" method="get">
+          <b>CTF:</b> $ctf_event_name$<br/>
+          Apply to: <b>$Teams$</b><br/>
+          Modify Question: <b>$Number$</b><br/><br/>
 
+          <input type="hidden" name="ctf_id" value="$ctf_id$"/>
+          <input type="hidden" name="Teams" value="$Teams$"/>
+          <input type="hidden" name="Adjust" value="True"/>
+          <input type="hidden" name="Number" value="$Number$"/>
 
-        ✚ <input type="number" min="0" width="5" id="Base" name="Base"/> Enter number of <b>base points</b> to award. Do not leave it empty. Enter a 0 to indicate 0.
-        <br/>
-        ✚ <input type="number" min="0" width="5" id="Bonus" name="Bonus"/> Enter number of <b>bonus points</b> to award. Do not leave it empty. Enter a 0 to indicate 0.
-        <br/>
-        ➖ <input type="number" min="0" id="Penalty" name="Penalty"/> Enter number of <b>penalty points</b> to assess. Do not leave it empty. Enter a 0 to indicate 0.
-        <br/>
-        ☰ <input type="text" id="Note" name="Note"/> REQUIRED Enter a <b>brief note</b> that explains the reason for this adjustment
-        <br/>
-        <input type="submit" value="Submit"/>
-      </form>
-    </html>
+          ✚ <input type="number" min="0" id="Base" name="Base" value="0"/> Base points<br/>
+          ✚ <input type="number" min="0" id="Bonus" name="Bonus" value="0"/> Bonus points<br/>
+          ➖ <input type="number" min="0" id="Penalty" name="Penalty" value="0"/> Penalty points<br/>
+          ☰ <input type="text" id="Note" name="Note" required="required"/> Required note<br/><br/>
+          <input type="submit" value="Submit"/>
+        </form>
+      </html>
     </panel>
   </row>
   <row>
     <panel>
       <table>
-        <title>Questions</title>
+        <title>Questions — $ctf_event_name$</title>
         <search>
-          <query>| inputlookup ctf_questions | table Number Question BasePoints StartTime EndTime</query>
-          <earliest>0</earliest>
-          <latest></latest>
+          <query>| inputlookup ctf_questions
+| search ctf_id="$ctf_id$"
+| table Number Question BasePoints StartTime EndTime
+| sort Number</query>
         </search>
-        <option name="wrap">true</option>
-        <option name="rowNumbers">false</option>
-        <option name="drilldown">cell</option>
-        <option name="dataOverlayMode">none</option>
-        <option name="count">10</option>
+        <option name="count">50</option>
+        <option name="drilldown">none</option>
       </table>
     </panel>
   </row>

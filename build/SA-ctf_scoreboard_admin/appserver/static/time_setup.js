@@ -1,32 +1,37 @@
 require([
-    'underscore',
-    'jquery',
-    'splunkjs/mvc',
-    'splunkjs/mvc/searchmanager',
-    'splunkjs/mvc/simplexml/ready!',
-    'splunkjs/ready!'
+    "underscore",
+    "jquery",
+    "splunkjs/mvc",
+    "splunkjs/mvc/searchmanager",
+    "splunkjs/mvc/simplexml/ready!"
 ], function(_, $, mvc, SearchManager) {
-    $('#start_time_picker').datetimepicker({
+    "use strict";
+
+    function submitted() {
+        return mvc.Components.get("submitted");
+    }
+
+    $("#start_time_picker").datetimepicker({
         dateFormat: "yy-mm-dd",
         timeFormat: "HH:mm z",
         controlType: "select",
         onClose: function() {
-            var myDate = $('#start_time_picker').datetimepicker("getDate")
-            var myEpoch = myDate.getTime() / 1000
-            var myHtml = myEpoch
-            mvc.Components.get('submitted').set('StartTimeToken', myEpoch);
+            var date = $("#start_time_picker").datetimepicker("getDate");
+            if (date) {
+                submitted().set("StartTimeToken", date.getTime() / 1000);
+            }
         }
     });
 
-    $('#end_time_picker').datetimepicker({
+    $("#end_time_picker").datetimepicker({
         dateFormat: "yy-mm-dd",
         timeFormat: "HH:mm z",
         controlType: "select",
         onClose: function() {
-            var myDate = $('#end_time_picker').datetimepicker("getDate")
-            var myEpoch = myDate.getTime() / 1000
-            var myHtml = myEpoch
-            mvc.Components.get('submitted').set('EndTimeToken', myEpoch);
+            var date = $("#end_time_picker").datetimepicker("getDate");
+            if (date) {
+                submitted().set("EndTimeToken", date.getTime() / 1000);
+            }
         }
     });
 
@@ -35,37 +40,57 @@ require([
         app: "SA-ctf_scoreboard_admin",
         cache: false,
         autostart: false,
-        search: "| inputlookup ctf_questions"
+        search: "| makeresults"
     });
-    mvc.Components.get('submitted').set('somethingchanged', Date.now().toString());
 
+    submitted().set("somethingchanged", Date.now().toString());
 
-    document.getElementById('submit_button').onclick = function(){
-    	
-    	document.getElementById("update_results").innerHTML="Starting search...!";
-    	//updateTimesSM.finalize();
-    	var searchString =  '| inputlookup ctf_questions | eval StartTime=' 
-    	                    + mvc.Components.get('submitted').get('StartTimeToken') 
-    	                    + '| eval EndTime='
-    	                    + mvc.Components.get('submitted').get('EndTimeToken')
-    	                    + '| outputlookup ctf_questions';
+    document.getElementById("submit_button").onclick = function() {
+        var ctfId = submitted().get("ctf_id");
+        var start = submitted().get("StartTimeToken");
+        var end = submitted().get("EndTimeToken");
+
+        if (!ctfId || ctfId === "__NO_CTF_SELECTED__") {
+            document.getElementById("update_results").innerHTML =
+                "Select a CTF event before changing question times.";
+            return;
+        }
+        if (!start || !end) {
+            document.getElementById("update_results").innerHTML =
+                "Select both a start and end time.";
+            return;
+        }
+        if (Number(end) <= Number(start)) {
+            document.getElementById("update_results").innerHTML =
+                "End time must be later than start time.";
+            return;
+        }
+
+        document.getElementById("update_results").innerHTML = "Starting search...";
+
+        var escaped = String(ctfId).replace(/"/g, '\\"');
+        var searchString =
+            '| inputlookup ctf_questions ' +
+            '| eval StartTime=if(ctf_id="' + escaped + '",' + start + ',StartTime) ' +
+            '| eval EndTime=if(ctf_id="' + escaped + '",' + end + ',EndTime) ' +
+            '| outputlookup ctf_questions';
+
         updateTimesSM.settings.set("search", searchString);
-    	updateTimesSM.startSearch();
-    
-        updateTimesSM.on('search:failed', function(properties) {
-            // Print the entire properties object
-            document.getElementById("update_results").innerHTML="Failed!";
+        updateTimesSM.startSearch();
+
+        updateTimesSM.on("search:failed", function() {
+            document.getElementById("update_results").innerHTML = "Failed.";
         });
-    
-        updateTimesSM.on('search:progress', function(properties) {
-            // Print just the event count from the search job
-            document.getElementById("update_results").innerHTML="In progress with " + properties.content.eventCount + " events...";
+
+        updateTimesSM.on("search:progress", function(properties) {
+            document.getElementById("update_results").innerHTML =
+                "In progress with " + properties.content.eventCount + " events...";
         });
-    
-        updateTimesSM.on('search:done', function(properties) {
-            // Print the search job properties
-            document.getElementById("update_results").innerHTML="Done! Verify results below.";
-            mvc.Components.get('submitted').set('somethingchanged', Date.now().toString());
+
+        updateTimesSM.on("search:done", function() {
+            document.getElementById("update_results").innerHTML =
+                "Done. Verify the selected CTF below.";
+            submitted().set("somethingchanged", Date.now().toString());
         });
-    }
+    };
 });

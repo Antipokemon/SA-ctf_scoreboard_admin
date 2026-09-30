@@ -1,23 +1,26 @@
-<dashboard version="1.1" refresh="15">
+<dashboard version="1.1" script="ctf_admin_context.js" theme="dark" refresh="15">
   <label>Question Time/Answer Densities</label>
   <row>
     <panel>
-      <viz type="timeline_app.timeline">
+      <table>
+        <title>$ctf_event_name$</title>
         <search>
-          <query>index="scoreboard_admin" AND (Result="Correct" OR Result="Incorrect")  user!=admin| eval binresult=if(Result="Correct",1000,2000)| append [| inputlookup ctf_questions  | eval _time = StartTime, Result="Init", binresult=1500 | table _time Number Result binresult ] | search  Number!=1  |table _time,Number,binresult,Result</query>
+          <query>index=scoreboard_admin ctf_id="$ctf_id$" (Result="Correct" OR Result="Incorrect") user!=admin
+| eval EventType=Result
+| append [
+    | inputlookup ctf_questions
+    | search ctf_id="$ctf_id$"
+    | eval _time=StartTime, EventType="Question Start"
+    | fields _time ctf_id Number EventType
+  ]
+| table _time Number EventType user Team
+| sort _time Number</query>
           <earliest>0</earliest>
           <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
         </search>
-        <option name="timeline_app.timeline.axisTimeFormat">SECONDS</option>
-        <option name="timeline_app.timeline.colorMode">sequencial</option>
-        <option name="timeline_app.timeline.maxColor">#ff0000</option>
-        <option name="timeline_app.timeline.minColor">#008726</option>
-        <option name="timeline_app.timeline.numOfBins">3</option>
-        <option name="timeline_app.timeline.tooltipTimeFormat">SECONDS</option>
-        <option name="timeline_app.timeline.useColors">1</option>
-        <option name="height">1500</option>
-      </viz>
+        <option name="count">100</option>
+        <option name="drilldown">none</option>
+      </table>
     </panel>
   </row>
 </dashboard>

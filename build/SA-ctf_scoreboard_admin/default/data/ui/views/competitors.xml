@@ -1,21 +1,19 @@
-<dashboard version="1.1">
+<dashboard version="1.1" script="ctf_admin_context.js" theme="dark">
   <label>Competitors</label>
   <row>
     <panel>
-      <title>Competitors</title>
+      <title>Registered Competitors — $ctf_event_name$</title>
       <table>
         <search>
-          <query>| inputlookup ctf_users |  rex field=Username "^user(?&lt;UserNumber&gt;\d+)$" | sort UserNumber | fields - UserNumber</query>
-          <earliest>$earliest$</earliest>
-          <latest>$latest$</latest>
-          <sampleRatio>1</sampleRatio>
+          <query>| inputlookup ctf_registrations
+| search ctf_id="$ctf_id$" status="registered"
+| sort Team Username
+| table Username DisplayUsername Team FirstName LastName Email registered_at updated_at</query>
+          <earliest>0</earliest>
+          <latest>now</latest>
         </search>
-        <option name="count">20</option>
-        <option name="dataOverlayMode">none</option>
-        <option name="drilldown">cell</option>
-        <option name="percentagesRow">false</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
+        <option name="count">50</option>
+        <option name="drilldown">none</option>
         <option name="wrap">true</option>
       </table>
     </panel>

@@ -1,25 +1,20 @@
-<dashboard version="1.1">
+<dashboard version="1.1" script="ctf_admin_context.js" theme="dark">
   <label>Helpful Links</label>
   <row>
     <panel>
       <html>
-
-<h1>
-	During the competition, you may want to open these dashboards in tabs.
-</h1>
-<style>.btn-primary { margin: 5px 10px 5px 0; }</style>
-<p>
-<a href="/app/SA-ctf_scoreboard/AllScores" class="btn btn-primary" target="_blank">All Scores</a>
-<a href="/app/SA-ctf_scoreboard/top_10_teams" class="btn btn-primary" target="_blank">Top 10 Teams</a>
-<a href="/app/SA-ctf_scoreboard/event_activity" class="btn btn-primary" target="_blank">CTF Activity</a>
-<a href="/app/SA-ctf_scoreboard/score_timeline" class="btn btn-primary" target="_blank">Score timeline</a>
-<a href="/app/SA-ctf_scoreboard/question_timeanswer_densities" class="btn btn-primary" target="_blank">Question and Answer Density</a>
-<a href="/app/SA-ctf_scoreboard/ebadges_by_team" class="btn btn-primary" target="_blank">eBadges by Team</a>
-<a href="somafm_music_to_hack_by" class="btn btn-primary" target="_blank">Defcon Music for Ambiance</a>
-<a href="countdown" class="btn btn-primary" target="_blank">Timer for event countdown</a>
-</p>
-
-</html>
+        <h1>$ctf_event_name$</h1>
+        <p>Open participant dashboards for the selected CTF.</p>
+        <style>.btn-primary { margin:5px 10px 5px 0; }</style>
+        <p>
+          <a href="/app/SA-ctf_scoreboard/questions?ctf_id=$ctf_id$" class="btn btn-primary" target="_blank">Questions</a>
+          <a href="/app/SA-ctf_scoreboard/AllScores?ctf_id=$ctf_id$" class="btn btn-primary" target="_blank">All Scores</a>
+          <a href="/app/SA-ctf_scoreboard/top_10_teams?ctf_id=$ctf_id$" class="btn btn-primary" target="_blank">Top 10 Teams</a>
+          <a href="/app/SA-ctf_scoreboard/event_activity?ctf_id=$ctf_id$" class="btn btn-primary" target="_blank">CTF Activity</a>
+          <a href="/app/SA-ctf_scoreboard/score_timeline?ctf_id=$ctf_id$" class="btn btn-primary" target="_blank">Score Timeline</a>
+          <a href="/app/SA-ctf_registration/admin?ctf_id=$ctf_id$" class="btn btn-primary" target="_blank">Registration Admin</a>
+        </p>
+      </html>
     </panel>
   </row>
 </dashboard>
