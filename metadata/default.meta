@@ -1,2 +1,7 @@
+[collections/ctf_questions]
+access = read : [ admin, ctf_admin, ctf_answers_service, ctf_competitor ], write : [ admin, ctf_admin ]
+export = system
+
 [transforms/ctf_questions]
+access = read : [ admin, ctf_admin, ctf_answers_service, ctf_competitor ], write : [ admin, ctf_admin ]
 export = system

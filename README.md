@@ -338,3 +338,19 @@ or the repository's documented build target.
 
 - `SA-ctf_registration` — event definitions, registration windows, event windows, participant registration, role assignment
 - `SA-ctf_scoreboard` — participant questions, submissions, hints, and scoring
+
+## Content ownership and upgrades
+
+`SA-ctf_scoreboard_admin` is the authoritative owner of the three event-content KV Store collections:
+
+```text
+ctf_questions
+ctf_answers
+ctf_hints
+```
+
+`ctf_questions` is exported system-wide so `SA-ctf_scoreboard` can display questions, but the collection itself remains in the admin app namespace. Answers and hints remain protected in the admin app.
+
+The compatibility build explicitly carries the collection and transform definitions for all three collections. Updating the app in place does not intentionally delete existing KV Store rows; however, a package that omits a collection definition can make existing data unavailable through `inputlookup`. The build tests therefore verify that `ctf_questions` is present in the final overlay. Back up KV Store content before uninstalling/replacing the app entirely.
+
+The existing `backup-scoreboard.py` utility discovers all collections in both scoreboard apps, so once `ctf_questions` is owned here it is included in normal admin-app KV Store backups.

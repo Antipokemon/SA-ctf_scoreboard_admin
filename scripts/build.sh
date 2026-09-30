@@ -21,6 +21,15 @@ rm -f "$ARCHIVE"
 rm -rf "$APP/bin/splunklib"
 
 cp -a "$ROOT/overrides/." "$APP/"
+
+# Merge compatibility metadata instead of replacing upstream default.meta.
+# ctf_questions is owned by the admin app and must remain system-visible to
+# the participant app while answers/hints stay protected.
+if [[ -f "$ROOT/metadata/default.meta" ]]; then
+    printf '\n' >> "$APP/metadata/default.meta"
+    cat "$ROOT/metadata/default.meta" >> "$APP/metadata/default.meta"
+fi
+
 python3 "$ROOT/scripts/patch_simplexml.py" "$APP"
 
 # Avoid shipping runtime/generated secrets or caches.

@@ -48,6 +48,24 @@ class CompatibilityTests(unittest.TestCase):
         self.assertIn("dashboard|form", text)
         self.assertIn('version="1.1"', text)
 
+    def test_admin_app_owns_questions_answers_and_hints(self):
+        collections = (ROOT / "overrides/default/collections.conf").read_text()
+        transforms = (ROOT / "overrides/default/transforms.conf").read_text()
+        for name in ("ctf_questions", "ctf_answers", "ctf_hints"):
+            self.assertIn(f"[{name}]", collections)
+            self.assertIn(f"[{name}]", transforms)
+
+    def test_questions_are_exported_for_participant_read_access(self):
+        meta = (ROOT / "metadata/default.meta").read_text()
+        self.assertIn("[collections/ctf_questions]", meta)
+        self.assertIn("ctf_competitor", meta)
+        self.assertIn("[transforms/ctf_questions]", meta)
+        self.assertIn("export = system", meta)
+
+    def test_builder_merges_question_metadata(self):
+        build = (ROOT / "scripts/build.sh").read_text()
+        self.assertIn('cat "$ROOT/metadata/default.meta" >> "$APP/metadata/default.meta"', build)
+
     def test_app_version(self):
         cfg = configparser.ConfigParser()
         cfg.read(ROOT / "overrides/default/app.conf")
