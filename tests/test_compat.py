@@ -55,6 +55,24 @@ class CompatibilityTests(unittest.TestCase):
             self.assertIn(f"[{name}]", collections)
             self.assertIn(f"[{name}]", transforms)
 
+    def test_imported_content_fields_are_exposed_by_lookups(self):
+        collections = (ROOT / "overrides/default/collections.conf").read_text()
+        transforms = (ROOT / "overrides/default/transforms.conf").read_text()
+
+        for field in (
+            "Subject",
+            "Category",
+            "ChallengeID",
+            "PrimarySourcetype",
+            "LearningObjective",
+            "ReferenceSPL",
+        ):
+            self.assertIn(f"field.{field} = string", collections)
+            self.assertIn(field, transforms)
+
+        self.assertIn("field.AnswerType = string", collections)
+        self.assertIn("fields_list = ctf_id, Number, Answer, AnswerType", transforms)
+
     def test_questions_are_exported_for_participant_read_access(self):
         meta = (ROOT / "metadata/default.meta").read_text()
         self.assertIn("[collections/ctf_questions]", meta)
